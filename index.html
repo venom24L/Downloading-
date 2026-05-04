@@ -602,7 +602,9 @@ body.void-mode #bg-gradient { filter: hue-rotate(180deg) saturate(0.2); }
   <button class="secret-close" onclick="closeSecret()">[ Close ]</button>
 </div>
 
-<script>
+<script type="module">
+import CONFIG_DATA from './data.js';
+
 /* ================================================================
    KENJAKU — ETERNAL VESSEL
    Complete JavaScript Engine
@@ -614,10 +616,14 @@ body.void-mode #bg-gradient { filter: hue-rotate(180deg) saturate(0.2); }
 // 0. CONFIGURATION — Edit images here later
 // ─────────────────────────────────────────────
 const CONFIG = {
-  totalWidth: 0,          // computed
-  ease: 0.07,             // scroll lerp factor
-  friction: 0.88,         // touch inertia friction
-  parallelEase: 0.05,     // parallax lerp
+  totalWidth: 0,
+  ease: 0.07,
+  friction: 0.88,
+  parallelEase: 0.05,
+  images: CONFIG_DATA.images, // بينادي الصور من ملف الـ data
+  eras: CONFIG_DATA.eras      // بينادي العصور من ملف الـ data
+};
+     // parallax lerp
 
   // IMAGE DATA — Replace src with Pinterest URLs later
   // depth: 1=foreground (fast), 2=mid, 3=background (slow)
