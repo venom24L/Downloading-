@@ -1,1602 +1,1076 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KENJAKU — The Eternal Vessel</title>
-<style>
-/* ============================================================
-   KENJAKU — ETERNAL VESSEL
-   Advanced Creative Single Page Experience
-   Mobile-First | Horizontal Scroll | Parallax 3D | WebGL Shaders
-   ============================================================ */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helicopter Rotor Spin-Up & Takeoff</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+        }
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=JetBrains+Mono:wght@300;400&family=Noto+Serif+JP:wght@200;300;400&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-:root {
-  /* ERA 1: THE ANCIENT AGE */
-  --era1-bg:       #0a0508;
-  --era1-accent:   #7B3F6E;
-  --era1-glow:     rgba(123, 63, 110, 0.4);
-  --era1-text:     #c8a2cb;
-  --era1-overlay:  rgba(30, 5, 25, 0.7);
+        body {
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-  /* ERA 2: TRANSMIGRATION */
-  --era2-bg:       #050a0f;
-  --era2-accent:   #1a6b8a;
-  --era2-glow:     rgba(26, 107, 138, 0.4);
-  --era2-text:     #7ecce0;
-  --era2-overlay:  rgba(5, 15, 25, 0.7);
+        .container {
+            position: relative;
+            width: 95vw;
+            max-width: 1000px;
+            aspect-ratio: 1000 / 620;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.08);
+            background: #000;
+        }
 
-  /* ERA 3: GETO'S AGE */
-  --era3-bg:       #080a05;
-  --era3-accent:   #4a7c3f;
-  --era3-glow:     rgba(74, 124, 63, 0.4);
-  --era3-text:     #a8cc8a;
-  --era3-overlay:  rgba(10, 18, 5, 0.7);
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 18px;
+        }
 
-  /* ERA 4: THE MERGER */
-  --era4-bg:       #0f0505;
-  --era4-accent:   #8b1a1a;
-  --era4-glow:     rgba(139, 26, 26, 0.5);
-  --era4-text:     #e07070;
-  --era4-overlay:  rgba(20, 5, 5, 0.8);
+        .info-overlay {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            letter-spacing: 0.04em;
+            pointer-events: none;
+            transition: opacity 0.6s;
+            opacity: 0.85;
+        }
 
-  --current-bg:    var(--era1-bg);
-  --current-accent:var(--era1-accent);
-  --current-glow:  var(--era1-glow);
-  --current-text:  var(--era1-text);
-}
-
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-html, body {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: #000;
-  font-family: 'JetBrains Mono', monospace;
-  cursor: none;
-  touch-action: none;
-}
-
-/* ── CUSTOM CURSOR ── */
-#cursor {
-  position: fixed;
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  border: 1px solid rgba(200,160,220,0.7);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: width 0.25s, height 0.25s, border-color 0.3s;
-  mix-blend-mode: difference;
-}
-#cursor-dot {
-  position: fixed;
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: rgba(200,160,220,0.9);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-}
-#cursor.active { width: 40px; height: 40px; border-color: rgba(255,80,80,0.8); }
-
-/* ── MAIN STAGE ── */
-#stage {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: #000;
-}
-
-/* Dynamic background gradient */
-#bg-gradient {
-  position: absolute;
-  inset: -20%;
-  width: 140%;
-  height: 140%;
-  background: radial-gradient(ellipse at 30% 50%, var(--era1-glow) 0%, transparent 60%),
-              radial-gradient(ellipse at 70% 50%, rgba(20, 0, 30, 0.5) 0%, transparent 50%);
-  transition: background 2s ease;
-  z-index: 0;
-}
-
-/* ── HORIZONTAL TRACK ── */
-#track {
-  position: absolute;
-  top: 0; left: 0;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  will-change: transform;
-  z-index: 1;
-}
-
-/* ── SVG NEURAL THREAD LAYER ── */
-#neural-svg {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 5;
-  overflow: visible;
-}
-
-/* ── SCANLINES ── */
-#scanlines {
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
-  pointer-events: none;
-  z-index: 8;
-  opacity: 0.6;
-}
-
-/* ── VIGNETTE ── */
-#vignette {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
-  pointer-events: none;
-  z-index: 7;
-}
-
-/* ── COLOR OVERLAY ── */
-#era-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--era1-overlay);
-  pointer-events: none;
-  z-index: 6;
-  transition: background 2.5s ease;
-  mix-blend-mode: multiply;
-}
-
-/* ── ERA SECTIONS ── */
-.era-section {
-  position: relative;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* ── SECTION LABEL ── */
-.section-label {
-  position: absolute;
-  top: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.5rem;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.2);
-  white-space: nowrap;
-  z-index: 10;
-  transition: color 2s;
-}
-
-/* ── IMAGE CARDS ── */
-.img-card {
-  position: absolute;
-  border-radius: 4px;
-  overflow: hidden;
-  cursor: none;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-.img-card .card-inner {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Placeholder gradient */
-.img-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.45rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  position: relative;
-  overflow: hidden;
-}
-
-.img-placeholder::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: inherit;
-  filter: blur(0px);
-  transition: filter 0.5s;
-}
-
-.img-placeholder .ph-label {
-  position: relative;
-  z-index: 2;
-  color: rgba(255,255,255,0.3);
-}
-
-.img-placeholder .ph-id {
-  position: relative;
-  z-index: 2;
-  color: rgba(255,255,255,0.15);
-  font-size: 0.4rem;
-}
-
-/* Glitch shader canvas overlay */
-.shader-canvas {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0;
-  transition: opacity 0.4s;
-  mix-blend-mode: screen;
-}
-
-.img-card:hover .shader-canvas,
-.img-card.active .shader-canvas { opacity: 1; }
-
-/* Card border glow */
-.img-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  transition: border-color 0.5s, box-shadow 0.5s;
-  pointer-events: none;
-  z-index: 4;
-}
-
-.img-card.active::after {
-  border-color: var(--current-accent);
-  box-shadow: 0 0 30px var(--current-glow), inset 0 0 20px var(--current-glow);
-}
-
-/* ── TEXT CONTENT ── */
-.era-text-block {
-  position: absolute;
-  z-index: 10;
-  max-width: 260px;
-  padding: 1.5rem;
-  text-align: left;
-}
-
-.era-number {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.45rem;
-  letter-spacing: 0.4em;
-  color: var(--current-accent, rgba(123,63,110,0.8));
-  text-transform: uppercase;
-  margin-bottom: 0.8rem;
-  transition: color 2s;
-}
-
-.era-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.4rem, 4vw, 2.2rem);
-  font-weight: 300;
-  line-height: 1.2;
-  color: rgba(255,255,255,0.85);
-  margin-bottom: 0.6rem;
-  transition: color 2s;
-}
-
-.era-title em {
-  font-style: italic;
-  color: var(--current-text, #c8a2cb);
-  transition: color 2s;
-}
-
-.era-desc {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(0.75rem, 2vw, 0.9rem);
-  font-weight: 300;
-  line-height: 1.8;
-  color: rgba(255,255,255,0.3);
-  font-style: italic;
-}
-
-/* ── JAPANESE VERTICAL TEXT ── */
-.jp-text {
-  font-family: 'Noto Serif JP', serif;
-  font-weight: 200;
-  font-size: clamp(0.7rem, 2vw, 0.9rem);
-  writing-mode: vertical-rl;
-  color: rgba(255,255,255,0.08);
-  position: absolute;
-  letter-spacing: 0.3em;
-}
-
-/* ── YEAR DISPLAY ── */
-.year-marker {
-  position: absolute;
-  bottom: 3.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(3rem, 12vw, 6rem);
-  font-weight: 300;
-  color: rgba(255,255,255,0.04);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 2;
-  transition: color 2s;
-}
-
-/* ── PROGRESS BAR ── */
-#progress-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--era1-accent), transparent);
-  width: 0%;
-  z-index: 100;
-  transition: background 2s, width 0.1s linear;
-}
-
-/* ── ERA INDICATOR ── */
-#era-indicator {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 100;
-  text-align: right;
-}
-#era-indicator .era-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.45rem;
-  letter-spacing: 0.3em;
-  color: rgba(255,255,255,0.2);
-  text-transform: uppercase;
-}
-#era-indicator .era-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.85rem;
-  font-weight: 300;
-  font-style: italic;
-  color: rgba(255,255,255,0.4);
-  transition: color 2s;
-}
-
-/* ── SCROLL HINT ── */
-#scroll-hint {
-  position: fixed;
-  bottom: 1.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  opacity: 1;
-  transition: opacity 1s;
-}
-#scroll-hint .hint-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.45rem;
-  letter-spacing: 0.3em;
-  color: rgba(255,255,255,0.2);
-  text-transform: uppercase;
-}
-#scroll-hint .hint-arrow {
-  width: 30px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: arrow-pulse 2s ease-in-out infinite;
-}
-@keyframes arrow-pulse {
-  0%, 100% { transform: scaleX(0.5); opacity: 0.3; }
-  50% { transform: scaleX(1); opacity: 0.7; }
-}
-
-/* ── HIDDEN CONTENT REVEAL ── */
-#secret-overlay {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 200;
-  opacity: 0;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1rem;
-  transition: opacity 0.5s;
-}
-#secret-overlay.visible {
-  opacity: 1;
-  pointer-events: all;
-}
-.secret-text {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1rem, 4vw, 1.8rem);
-  color: rgba(200, 100, 100, 0.7);
-  font-style: italic;
-  text-align: center;
-  max-width: 80vw;
-  line-height: 1.8;
-}
-.secret-jp {
-  font-family: 'Noto Serif JP', serif;
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.1);
-  letter-spacing: 0.3em;
-}
-.secret-close {
-  margin-top: 2rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.5rem;
-  letter-spacing: 0.3em;
-  color: rgba(255,255,255,0.15);
-  text-transform: uppercase;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 0.6rem 1.5rem;
-  background: transparent;
-  cursor: pointer;
-  color: rgba(255,255,255,0.3);
-}
-
-/* ── FLASH ── */
-#flash {
-  position: fixed;
-  inset: 0;
-  background: #fff;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 150;
-}
-
-/* ── GLITCH BARS ── */
-.glitch-bar {
-  position: fixed;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  pointer-events: none;
-  z-index: 110;
-  opacity: 0;
-}
-
-/* ── PARTICLE FIELD ── */
-#particles {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* ── HOLD RING ── */
-.hold-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 6px;
-  pointer-events: none;
-  z-index: 10;
-  overflow: hidden;
-}
-.hold-ring-fill {
-  position: absolute;
-  inset: 0;
-  border-radius: 6px;
-  border: 2px solid rgba(255,80,80,0.8);
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 0.7s linear;
-  box-shadow: 0 0 12px rgba(255,80,80,0.5);
-}
-.img-card.holding .hold-ring-fill { clip-path: inset(0 0% 0 0); }
-
-/* ── KONAMI BADGE ── */
-#konami-badge {
-  position: fixed;
-  bottom: 3rem;
-  right: 1.5rem;
-  z-index: 190;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.4rem;
-  letter-spacing: 0.2em;
-  color: rgba(255,80,80,0.6);
-  text-transform: uppercase;
-  border: 1px solid rgba(255,80,80,0.2);
-  padding: 0.4rem 0.8rem;
-  background: rgba(0,0,0,0.8);
-  transform: translateY(20px);
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  pointer-events: none;
-}
-#konami-badge.show { transform: translateY(0); opacity: 1; }
-
-/* ── VOID MODE ── */
-body.void-mode #era-overlay { background: rgba(0,0,0,0.95) !important; }
-body.void-mode .era-title { color: rgba(255,40,40,0.7) !important; }
-body.void-mode #bg-gradient { filter: hue-rotate(180deg) saturate(0.2); }
-
-/* ── TYPEWRITER CURSOR ── */
-.tw-cursor {
-  display: inline-block;
-  width: 2px;
-  height: 0.9em;
-  background: currentColor;
-  margin-left: 2px;
-  vertical-align: middle;
-  animation: tw-blink 0.7s step-end infinite;
-}
-@keyframes tw-blink { 0%,50%{opacity:1} 51%,100%{opacity:0} }
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .era-text-block { max-width: 200px; padding: 1rem; }
-  .era-desc { display: none; }
-}
-@media (hover: none) {
-  #cursor, #cursor-dot { display: none; }
-  body { cursor: auto; }
-}
-</style>
+        .phase-indicator {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #ffb347;
+            padding: 6px 16px;
+            border-radius: 14px;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            pointer-events: none;
+            transition: all 0.4s;
+            opacity: 0;
+            text-transform: uppercase;
+        }
+        .phase-indicator.visible {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-
-<!-- CURSOR -->
-<div id="cursor"></div>
-<div id="cursor-dot"></div>
-
-<!-- STAGE -->
-<div id="stage">
-  <div id="bg-gradient"></div>
-  <canvas id="particles"></canvas>
-
-  <!-- HORIZONTAL TRACK -->
-  <div id="track"></div>
-
-  <!-- NEURAL SVG THREADS -->
-  <svg id="neural-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-
-  <!-- OVERLAYS -->
-  <div id="era-overlay"></div>
-  <div id="scanlines"></div>
-  <div id="vignette"></div>
-</div>
-
-<!-- UI -->
-<div id="progress-bar"></div>
-<div id="era-indicator">
-  <div class="era-num">ERA_01 / 04</div>
-  <div class="era-name">The Ancient Age</div>
-</div>
-<div id="scroll-hint">
-  <div class="hint-text">Drag to traverse</div>
-  <div class="hint-arrow"></div>
-</div>
-
-<!-- FLASH -->
-<div id="flash"></div>
-
-<!-- KONAMI BADGE -->
-<div id="konami-badge">⬆⬆⬇⬇ — VOID MODE ACTIVATED</div>
-
-<!-- SECRET OVERLAY -->
-<div id="secret-overlay">
-  <div class="secret-text">"I do not possess the body.<br>The body possesses the idea."</div>
-  <div class="secret-jp">肉体は器に過ぎない。</div>
-  <div class="secret-text" style="font-size: clamp(0.7rem,2.5vw,1rem); color:rgba(200,100,100,0.4); margin-top:1rem;">— Kenjaku, Year Unknown</div>
-  <button class="secret-close" onclick="closeSecret()">[ Close ]</button>
-</div>
-
-<script>
-/* ================================================================
-   KENJAKU — ETERNAL VESSEL
-   Complete JavaScript Engine
-   ================================================================ */
-
-'use strict';
-
-// ─────────────────────────────────────────────
-// 0. CONFIGURATION — Edit images here later
-// ─────────────────────────────────────────────
-const CONFIG = {
-  totalWidth: 0,          // computed
-  ease: 0.07,             // scroll lerp factor
-  friction: 0.88,         // touch inertia friction
-  parallelEase: 0.05,     // parallax lerp
-
-  // IMAGE DATA — Replace src with Pinterest URLs later
-  // depth: 1=foreground (fast), 2=mid, 3=background (slow)
-  images: [
-    // ERA 1: THE ANCIENT AGE
-    { id:'https://i.postimg.cc/RZq8nXmQ/9592f1ec3101223ae30cbc7cc15bf4dd.jpg', era:1, src:'', label:'Ancient Vessel',     w:220, h:300, x:80,  y:-40,  depth:1, secret:true  },
-    { id:'img-002', era:1, src:'', label:'Before Time',        w:160, h:240, x:320, y:60,   depth:3, secret:false },
-    { id:'img-003', era:1, src:'', label:'The First Mind',     w:180, h:280, x:540, y:-60,  depth:2, secret:false },
-    // ERA 2: TRANSMIGRATION
-    { id:'img-004', era:2, src:'', label:'Migration',          w:200, h:300, x:80,  y:-30,  depth:1, secret:false },
-    { id:'img-005', era:2, src:'', label:'Empty Shell',        w:250, h:180, x:340, y:70,   depth:3, secret:true  },
-    { id:'img-006', era:2, src:'', label:'The Ritual',         w:170, h:260, x:600, y:-50,  depth:2, secret:false },
-    // ERA 3: GETO'S AGE
-    { id:'img-007', era:3, src:'', label:'Borrowed Face',      w:230, h:340, x:80,  y:-60,  depth:1, secret:false },
-    { id:'img-008', era:3, src:'', label:'Cursed Ideology',    w:180, h:250, x:350, y:50,   depth:2, secret:false },
-    { id:'img-009', era:3, src:'', label:'The Infiltrator',    w:210, h:290, x:580, y:-40,  depth:3, secret:true  },
-    // ERA 4: THE MERGER
-    { id:'img-010', era:4, src:'', label:'Culling Game',       w:260, h:360, x:80,  y:-80,  depth:1, secret:true  },
-    { id:'img-011', era:4, src:'', label:'Brain Vessel',       w:200, h:280, x:380, y:40,   depth:2, secret:false },
-    { id:'img-012', era:4, src:'', label:'The Merger',         w:240, h:320, x:640, y:-60,  depth:3, secret:false },
-  ],
-
-  eras: [
-    { id:1, num:'ERA_01',  name:'The Ancient Age',   year:'-~500 BCE', bg:'#0a0508', accent:'#7B3F6E', glow:'rgba(123,63,110,0.35)', text:'#c8a2cb', overlay:'rgba(30,5,25,0.65)', title:'Before the World<br><em>Forgot His Name</em>', desc:'He existed before records. A mind too vast for a single lifetime.' },
-    { id:2, num:'ERA_02',  name:'Transmigration',    year:'~600 CE',   bg:'#050a0f', accent:'#1a6b8a', glow:'rgba(26,107,138,0.35)', text:'#7ecce0', overlay:'rgba(5,15,25,0.65)',  title:'The Soul<br><em>Finds New Flesh</em>',      desc:'Each death, a new body. Each host, a discarded tool.' },
-    { id:3, num:'ERA_03',  name:"Geto's Age",        year:'2017 CE',   bg:'#080a05', accent:'#4a7c3f', glow:'rgba(74,124,63,0.35)',  text:'#a8cc8a', overlay:'rgba(10,18,5,0.65)',  title:'A Perfect<br><em>Face to Wear</em>',        desc:'Suguru Geto died that night. But his body kept walking.' },
-    { id:4, num:'ERA_04',  name:'The Great Merger',  year:'Present',   bg:'#0f0505', accent:'#8b1a1a', glow:'rgba(139,26,26,0.45)', text:'#e07070', overlay:'rgba(20,5,5,0.75)',   title:'The Game<br><em>Has Always Been Mine</em>', desc:'Every sorcerer. Every curse. Every move — calculated.' },
-  ],
-};
-
-// Section widths
-const SECTION_W = () => {
-  const vw = window.innerWidth;
-  return vw < 768 ? vw * 0.9 : Math.max(vw * 0.85, 700);
-};
-
-// ─────────────────────────────────────────────
-// 1. STATE
-// ─────────────────────────────────────────────
-const State = {
-  scroll:    { current: 0, target: 0, velocity: 0 },
-  parallax:  { current: 0, target: 0 },
-  touch:     { active: false, startX: 0, lastX: 0, velocity: 0, timestamp: 0 },
-  mouse:     { x: 0, y: 0, nx: 0, ny: 0 },  // normalized -1 to 1
-  cursor:    { x: 0, y: 0 },
-  cursorDot: { x: 0, y: 0 },
-  era:       1,
-  totalW:    0,
-  cards:     [],   // DOM refs
-  glitching: false,
-  secretMode: false,
-  longPressTimer: null,
-  longPressCard: null,
-  frame:     0,
-};
-
-// ─────────────────────────────────────────────
-// 2. DOM REFS
-// ─────────────────────────────────────────────
-const DOM = {
-  track:         document.getElementById('track'),
-  svg:           document.getElementById('neural-svg'),
-  bgGrad:        document.getElementById('bg-gradient'),
-  eraOverlay:    document.getElementById('era-overlay'),
-  progressBar:   document.getElementById('progress-bar'),
-  eraNum:        document.querySelector('#era-indicator .era-num'),
-  eraName:       document.querySelector('#era-indicator .era-name'),
-  scrollHint:    document.getElementById('scroll-hint'),
-  cursor:        document.getElementById('cursor'),
-  cursorDot:     document.getElementById('cursor-dot'),
-  flash:         document.getElementById('flash'),
-  secret:        document.getElementById('secret-overlay'),
-  particleCanvas:document.getElementById('particles'),
-};
-
-// ─────────────────────────────────────────────
-// 3. MATH UTILITIES
-// ─────────────────────────────────────────────
-const lerp = (a, b, t) => a + (b - a) * t;
-const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
-const rand  = (a, b) => a + Math.random() * (b - a);
-const map   = (v, i1, i2, o1, o2) => o1 + (v - i1) * (o2 - o1) / (i2 - i1);
-
-// ─────────────────────────────────────────────
-// 4. BUILD TRACK
-// ─────────────────────────────────────────────
-function buildTrack() {
-  DOM.track.innerHTML = '';
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const secW = SECTION_W();
-  let totalW = 0;
-
-  CONFIG.eras.forEach((era, ei) => {
-    const section = document.createElement('div');
-    section.className = 'era-section';
-    section.dataset.era = era.id;
-    section.style.width = secW + 'px';
-
-    // Year marker
-    const year = document.createElement('div');
-    year.className = 'year-marker';
-    year.textContent = era.year;
-    section.appendChild(year);
-
-    // Section label
-    const label = document.createElement('div');
-    label.className = 'section-label';
-    label.textContent = era.num + ' — ' + era.name;
-    section.appendChild(label);
-
-    // Japanese vertical text
-    const jp = document.createElement('div');
-    jp.className = 'jp-text';
-    jp.style.right = '1.5rem';
-    jp.style.top = '50%';
-    jp.style.transform = 'translateY(-50%)';
-    jp.textContent = ['古代の器', '魂の移動', '借りた顔', '大融合'][ei];
-    section.appendChild(jp);
-
-    // Text block
-    const txt = document.createElement('div');
-    txt.className = 'era-text-block';
-    txt.style.bottom = '4rem';
-    txt.style.left = '2rem';
-    txt.innerHTML = `
-      <div class="era-number">${era.num} / KENJAKU</div>
-      <div class="era-title">${era.title}</div>
-      <div class="era-desc">${era.desc}</div>
-    `;
-    section.appendChild(txt);
-
-    DOM.track.appendChild(section);
-    totalW += secW;
-  });
-
-  // Last breathing space
-  const spacer = document.createElement('div');
-  spacer.style.width = (vw * 0.3) + 'px';
-  spacer.style.height = '100%';
-  spacer.style.flexShrink = '0';
-  DOM.track.appendChild(spacer);
-  totalW += vw * 0.3;
-
-  State.totalW = totalW - vw;
-
-  // Now place image cards as absolute on track
-  buildImageCards(secW);
-}
-
-// ─────────────────────────────────────────────
-// 5. BUILD IMAGE CARDS
-// ─────────────────────────────────────────────
-function buildImageCards(secW) {
-  State.cards = [];
-  const vh = window.innerHeight;
-
-  CONFIG.images.forEach((img) => {
-    const eraIndex = img.era - 1;
-    const eraOffsetX = eraIndex * secW;
-    const era = CONFIG.eras[eraIndex];
-
-    const card = document.createElement('div');
-    card.className = 'img-card';
-    card.dataset.id = img.id;
-    card.dataset.era = img.era;
-    card.dataset.depth = img.depth;
-    card.dataset.secret = img.secret;
-
-    // Centered Y position
-    const centerY = vh / 2;
-    const cardTop = centerY + img.y - img.h / 2;
-
-    card.style.cssText = `
-      width: ${img.w}px;
-      height: ${img.h}px;
-      left: ${eraOffsetX + img.x}px;
-      top: ${cardTop}px;
-    `;
-
-    // Inner
-    const inner = document.createElement('div');
-    inner.className = 'card-inner';
-
-    // Placeholder
-    const ph = document.createElement('div');
-    ph.className = 'img-placeholder';
-    ph.style.background = buildPlaceholderGradient(img.era);
-
-    // If src provided, use img tag; else placeholder
-    if (img.src && img.src.length > 5) {
-      const imgEl = document.createElement('img');
-      imgEl.src = img.src;
-      imgEl.style.cssText = 'width:100%;height:100%;object-fit:cover;position:absolute;inset:0;';
-      ph.appendChild(imgEl);
-    }
-
-    const phLabel = document.createElement('div');
-    phLabel.className = 'ph-label';
-    phLabel.textContent = img.label;
-    ph.appendChild(phLabel);
-
-    const phId = document.createElement('div');
-    phId.className = 'ph-id';
-    phId.textContent = img.id;
-    ph.appendChild(phId);
-
-    inner.appendChild(ph);
-
-    // Shader Canvas
-    const shaderCanvas = document.createElement('canvas');
-    shaderCanvas.className = 'shader-canvas';
-    shaderCanvas.width = img.w;
-    shaderCanvas.height = img.h;
-    inner.appendChild(shaderCanvas);
-
-    card.appendChild(inner);
-    DOM.track.appendChild(card);
-
-    // Store reference
-    State.cards.push({
-      el: card,
-      shaderCanvas,
-      shaderCtx: shaderCanvas.getContext('2d'),
-      cfg: img,
-      era: img.era,
-      depth: img.depth,
-      baseLeft: eraOffsetX + img.x,
-      baseTop: cardTop,
-      currentX: 0,
-      currentY: 0,
-      glitchTime: 0,
-      hovered: false,
-      longPressed: false,
-    });
-
-    // Card interactions
-    setupCardInteractions(card, img);
-  });
-}
-
-function buildPlaceholderGradient(eraId) {
-  const palettes = [
-    'linear-gradient(135deg, #1a0520 0%, #2d0a3d 50%, #0d0215 100%)',
-    'linear-gradient(135deg, #020d18 0%, #0a2030 50%, #011020 100%)',
-    'linear-gradient(135deg, #040a02 0%, #0d1f08 50%, #030a02 100%)',
-    'linear-gradient(135deg, #150202 0%, #2a0505 50%, #0d0101 100%)',
-  ];
-  return palettes[eraId - 1] || palettes[0];
-}
-
-// ─────────────────────────────────────────────
-// 6. CARD INTERACTIONS
-// ─────────────────────────────────────────────
-function setupCardInteractions(card, imgCfg) {
-  // Add hold ring for secret cards
-  if (imgCfg.secret) {
-    const ring = document.createElement('div');
-    ring.className = 'hold-ring';
-    const ringFill = document.createElement('div');
-    ringFill.className = 'hold-ring-fill';
-    ring.appendChild(ringFill);
-    card.appendChild(ring);
-  }
-
-  // Long press detection with visual ring
-  const startLongPress = (e) => {
-    if (!imgCfg.secret) return;
-    card.classList.add('holding');
-    State.longPressTimer = setTimeout(() => {
-      card.classList.remove('holding');
-      triggerSecret(card, imgCfg);
-    }, 700);
-  };
-
-  const cancelLongPress = () => {
-    card.classList.remove('holding');
-    if (State.longPressTimer) {
-      clearTimeout(State.longPressTimer);
-      State.longPressTimer = null;
-    }
-  };
-
-  card.addEventListener('mousedown', startLongPress);
-  card.addEventListener('mouseup', cancelLongPress);
-  card.addEventListener('mouseleave', cancelLongPress);
-  card.addEventListener('touchstart', startLongPress, { passive: true });
-  card.addEventListener('touchend', cancelLongPress);
-  card.addEventListener('touchcancel', cancelLongPress);
-
-  card.addEventListener('mouseenter', () => {
-    card.classList.add('active');
-    DOM.cursor.classList.add('active');
-    const c = State.cards.find(c => c.el === card);
-    if (c) c.hovered = true;
-  });
-  card.addEventListener('mouseleave', () => {
-    card.classList.remove('active');
-    DOM.cursor.classList.remove('active');
-    const c = State.cards.find(c => c.el === card);
-    if (c) c.hovered = false;
-  });
-}
-
-// ─────────────────────────────────────────────
-// 7. SECRET TRIGGER
-// ─────────────────────────────────────────────
-function triggerSecret(card, imgCfg) {
-  // Flash + reveal
-  flashScreen(0.9, 80);
-  setTimeout(() => {
-    DOM.secret.classList.add('visible');
-    State.secretMode = true;
-  }, 150);
-
-  // Full glitch burst
-  burstGlitch(6);
-}
-
-window.closeSecret = function() {
-  DOM.secret.classList.remove('visible');
-  State.secretMode = false;
-  flashScreen(0.4, 60);
-};
-
-// ─────────────────────────────────────────────
-// 8. NEURAL SVG THREADS
-// ─────────────────────────────────────────────
-const Neural = {
-  paths: [],
-  nodes: [],
-  defs: null,
-
-  init() {
-    this.defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    DOM.svg.appendChild(this.defs);
-    this.buildFilter();
-    this.buildThreads();
-    this.buildNodes();
-  },
-
-  buildFilter() {
-    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
-    filter.setAttribute('id', 'glow-filter');
-    const blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
-    blur.setAttribute('stdDeviation', '2');
-    blur.setAttribute('result', 'coloredBlur');
-    const merge = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge');
-    const m1 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
-    m1.setAttribute('in', 'coloredBlur');
-    const m2 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
-    m2.setAttribute('in', 'SourceGraphic');
-    merge.appendChild(m1);
-    merge.appendChild(m2);
-    filter.appendChild(blur);
-    filter.appendChild(merge);
-    this.defs.appendChild(filter);
-  },
-
-  buildThreads() {
-    // Create SVG paths between card positions (viewport-relative)
-    const pairs = [
-      [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11]
-    ];
-    pairs.forEach(([ai, bi]) => {
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', 'rgba(123,63,110,0.15)');
-      path.setAttribute('stroke-width', '0.5');
-      path.setAttribute('filter', 'url(#glow-filter)');
-      path.setAttribute('stroke-dasharray', '4 8');
-      DOM.svg.appendChild(path);
-      this.paths.push({ el: path, aIdx: ai, bIdx: bi, phase: Math.random() * Math.PI * 2 });
-    });
-  },
-
-  buildNodes() {
-    // Glowing dots at thread intersections
-    for (let i = 0; i < 8; i++) {
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('r', '2');
-      circle.setAttribute('fill', 'rgba(123,63,110,0.4)');
-      circle.setAttribute('filter', 'url(#glow-filter)');
-      DOM.svg.appendChild(circle);
-      this.nodes.push({ el: circle, idx: Math.floor(Math.random() * CONFIG.images.length) });
-    }
-  },
-
-  getCardViewportPos(cardState) {
-    const scrollX = State.scroll.current;
-    const x = cardState.baseLeft - scrollX + cardState.cfg.w / 2;
-    const y = cardState.baseTop + cardState.cfg.h / 2;
-    return { x, y };
-  },
-
-  update(t) {
-    const era = CONFIG.eras[State.era - 1];
-    const strokeColor = era.accent;
-    const dashOffset = (t * 0.02) % 24;
-
-    this.paths.forEach((p, i) => {
-      if (p.aIdx >= State.cards.length || p.bIdx >= State.cards.length) return;
-      const a = this.getCardViewportPos(State.cards[p.aIdx]);
-      const b = this.getCardViewportPos(State.cards[p.bIdx]);
-
-      // Cubic bezier with mouse-reactive control points
-      const mx = State.mouse.nx * 40;
-      const my = State.mouse.ny * 30;
-      const cx1 = a.x + (b.x - a.x) * 0.33 + mx + Math.sin(t * 0.001 + p.phase) * 15;
-      const cy1 = a.y + (b.y - a.y) * 0.33 + my + Math.cos(t * 0.001 + p.phase) * 10;
-      const cx2 = a.x + (b.x - a.x) * 0.66 - mx + Math.cos(t * 0.0013 + p.phase) * 15;
-      const cy2 = a.y + (b.y - a.y) * 0.66 - my + Math.sin(t * 0.0013 + p.phase) * 10;
-
-      p.el.setAttribute('d', `M${a.x},${a.y} C${cx1},${cy1} ${cx2},${cy2} ${b.x},${b.y}`);
-      p.el.setAttribute('stroke', era.glow.replace('0.35', '0.2'));
-      p.el.setAttribute('stroke-dashoffset', dashOffset);
-
-      // Pulse opacity
-      const pulse = 0.1 + 0.1 * Math.sin(t * 0.002 + p.phase);
-      p.el.setAttribute('opacity', pulse);
-    });
-
-    this.nodes.forEach((n) => {
-      if (n.idx >= State.cards.length) return;
-      const pos = this.getCardViewportPos(State.cards[n.idx]);
-      n.el.setAttribute('cx', pos.x);
-      n.el.setAttribute('cy', pos.y);
-      n.el.setAttribute('fill', era.accent);
-      n.el.setAttribute('r', 1.5 + Math.sin(t * 0.003 + n.idx) * 1);
-    });
-  }
-};
-
-// ─────────────────────────────────────────────
-// 9. SHADER ENGINE (Canvas 2D)
-// ─────────────────────────────────────────────
-const Shader = {
-  update(cardState, t) {
-    if (!cardState.hovered && !State.glitching) return;
-    const ctx = cardState.shaderCtx;
-    const w   = cardState.cfg.w;
-    const h   = cardState.cfg.h;
-    const era = CONFIG.eras[cardState.era - 1];
-
-    ctx.clearRect(0, 0, w, h);
-
-    if (cardState.hovered || State.glitching) {
-      this.drawGlitch(ctx, w, h, t, era.accent);
-    }
-  },
-
-  drawGlitch(ctx, w, h, t, accentColor) {
-    // Horizontal scan lines with glitch distortion
-    const numLines = Math.floor(rand(3, 10));
-    for (let i = 0; i < numLines; i++) {
-      const y = rand(0, h);
-      const lineH = rand(1, 6);
-      const offset = rand(-15, 15);
-      const alpha = rand(0.05, 0.2);
-
-      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-      ctx.fillRect(offset, y, w, lineH);
-    }
-
-    // RGB channel split effect
-    const splitAmt = 3 + Math.sin(t * 0.005) * 2;
-    ctx.globalCompositeOperation = 'screen';
-
-    // Red channel
-    ctx.fillStyle = `rgba(255,0,80,0.08)`;
-    ctx.fillRect(-splitAmt, 0, w, h);
-
-    // Cyan channel
-    ctx.fillStyle = `rgba(0,255,200,0.06)`;
-    ctx.fillRect(splitAmt, 0, w, h);
-
-    ctx.globalCompositeOperation = 'source-over';
-
-    // Breathing vignette glow
-    const breathe = 0.5 + 0.5 * Math.sin(t * 0.003);
-    const grad = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)/1.5);
-    grad.addColorStop(0, 'transparent');
-    grad.addColorStop(1, `rgba(${hexToRgb(accentColor)},${0.15 * breathe})`);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Noise dots
-    if (Math.random() < 0.3) {
-      const numDots = Math.floor(rand(20, 80));
-      for (let i = 0; i < numDots; i++) {
-        ctx.fillStyle = `rgba(255,255,255,${rand(0.02, 0.08)})`;
-        ctx.fillRect(rand(0,w), rand(0,h), 1, 1);
-      }
-    }
-  }
-};
-
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `${r},${g},${b}`;
-}
-
-// ─────────────────────────────────────────────
-// 10. PARALLAX ENGINE
-// ─────────────────────────────────────────────
-const Parallax = {
-  // depth 1 = full speed, depth 2 = 60%, depth 3 = 30%
-  depthFactors: { 1: 1.0, 2: 0.6, 3: 0.3 },
-
-  update() {
-    const scroll = State.scroll.current;
-    const mx = State.mouse.nx * 12;
-    const my = State.mouse.ny * 8;
-
-    State.cards.forEach((c) => {
-      const factor = this.depthFactors[c.depth] || 1;
-      const parallaxOffset = scroll * (1 - factor);
-
-      // Smooth each card's visual position
-      const targetX = c.baseLeft - scroll + parallaxOffset * 0.5;
-      const targetY = c.baseTop + my * (1 / c.depth);
-
-      c.currentX = lerp(c.currentX, targetX, CONFIG.parallelEase + 0.04);
-      c.currentY = lerp(c.currentY, targetY, CONFIG.parallelEase + 0.03);
-
-      // Mouse-reactive tilt
-      const tiltX = my * (4 - c.depth * 0.8);
-      const tiltY = mx * (4 - c.depth * 0.8);
-      const scale = c.hovered ? 1.03 : 1;
-
-      c.el.style.transform = `
-        translate3d(${c.currentX - c.baseLeft}px, ${c.currentY - c.baseTop}px, 0)
-        rotateX(${tiltX * 0.3}deg)
-        rotateY(${tiltY * 0.3}deg)
-        scale(${scale})
-      `;
-    });
-  }
-};
-
-// ─────────────────────────────────────────────
-// 11. ERA SYSTEM
-// ─────────────────────────────────────────────
-const EraSystem = {
-  current: 1,
-  transitioning: false,
-
-  update() {
-    const vw = window.innerWidth;
-    const secW = SECTION_W();
-    const scroll = State.scroll.current;
-
-    // Which era is the center of screen in?
-    const centerScroll = scroll + vw / 2;
-    const newEra = Math.min(4, Math.max(1, Math.ceil(centerScroll / secW)));
-
-    if (newEra !== this.current) {
-      this.transition(newEra);
-    }
-  },
-
-  transition(newEra) {
-    this.current = newEra;
-    State.era = newEra;
-    const era = CONFIG.eras[newEra - 1];
-
-    // Update CSS vars
-    document.documentElement.style.setProperty('--current-accent', era.accent);
-    document.documentElement.style.setProperty('--current-glow', era.glow);
-    document.documentElement.style.setProperty('--current-text', era.text);
-
-    // Background gradient
-    DOM.bgGrad.style.background = `
-      radial-gradient(ellipse at 30% 50%, ${era.glow} 0%, transparent 60%),
-      radial-gradient(ellipse at 70% 50%, rgba(0,0,0,0.5) 0%, transparent 50%)
-    `;
-
-    // Era overlay
-    DOM.eraOverlay.style.background = era.overlay;
-
-    // UI text
-    DOM.eraNum.textContent = `${era.num} / 04`;
-    DOM.eraName.textContent = era.name;
-    DOM.eraName.style.color = era.text + 'aa';
-
-    // Progress bar gradient
-    DOM.progressBar.style.background = `linear-gradient(90deg, ${era.accent}, ${era.text}44)`;
-
-    // Flash on transition
-    flashScreen(0.25, 50);
-  }
-};
-
-// ─────────────────────────────────────────────
-// 12. PARTICLE ENGINE
-// ─────────────────────────────────────────────
-const Particles = {
-  particles: [],
-  ctx: null,
-  canvas: null,
-
-  init() {
-    this.canvas = DOM.particleCanvas;
-    this.ctx = this.canvas.getContext('2d');
-    this.resize();
-    this.spawn();
-  },
-
-  resize() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-  },
-
-  spawn() {
-    this.particles = [];
-    for (let i = 0; i < 60; i++) {
-      this.particles.push({
-        x: rand(0, window.innerWidth),
-        y: rand(0, window.innerHeight),
-        size: rand(0.3, 1.5),
-        vx: rand(-0.08, 0.08),
-        vy: rand(-0.12, -0.02),
-        alpha: rand(0.05, 0.3),
-        life: rand(0, 1),
-        maxLife: rand(0.5, 1.5) * 200,
-        era: 1,
-      });
-    }
-  },
-
-  update(t) {
-    const ctx = this.ctx;
-    const era = CONFIG.eras[State.era - 1];
-    const rgb = hexToRgb(era.accent);
-
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.particles.forEach(p => {
-      p.life++;
-      if (p.life > p.maxLife) {
-        p.x = rand(0, this.canvas.width);
-        p.y = rand(0, this.canvas.height);
-        p.life = 0;
-      }
-
-      p.x += p.vx + Math.sin(t * 0.001 + p.y * 0.01) * 0.05;
-      p.y += p.vy;
-
-      const fadeIn  = p.life / (p.maxLife * 0.2);
-      const fadeOut = 1 - (p.life - p.maxLife * 0.8) / (p.maxLife * 0.2);
-      const alpha   = p.alpha * Math.min(fadeIn, fadeOut, 1);
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${rgb},${Math.max(0, alpha)})`;
-      ctx.fill();
-    });
-  }
-};
-
-// ─────────────────────────────────────────────
-// 13. SCROLL ENGINE
-// ─────────────────────────────────────────────
-const ScrollEngine = {
-  init() {
-    // Wheel
-    window.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      State.scroll.target += e.deltaY * 0.8 + e.deltaX * 0.8;
-      this.clampTarget();
-    }, { passive: false });
-
-    // Touch
-    window.addEventListener('touchstart', (e) => {
-      const t = e.touches[0];
-      State.touch.active = true;
-      State.touch.startX = t.clientX;
-      State.touch.lastX = t.clientX;
-      State.touch.velocity = 0;
-      State.touch.timestamp = Date.now();
-    }, { passive: true });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!State.touch.active) return;
-      e.preventDefault();
-      const t = e.touches[0];
-      const dx = State.touch.lastX - t.clientX;
-      const dt = Date.now() - State.touch.timestamp;
-
-      State.touch.velocity = dx / Math.max(dt, 1) * 16;
-      State.scroll.target += dx * 1.2;
-      this.clampTarget();
-
-      State.touch.lastX = t.clientX;
-      State.touch.timestamp = Date.now();
-    }, { passive: false });
-
-    window.addEventListener('touchend', () => {
-      if (!State.touch.active) return;
-      State.touch.active = false;
-      // Inertia throw
-      State.scroll.velocity = State.touch.velocity;
-    });
-
-    // Keyboard
-    window.addEventListener('keydown', (e) => {
-      const amt = 300;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') State.scroll.target += amt;
-      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   State.scroll.target -= amt;
-      this.clampTarget();
-    });
-  },
-
-  clampTarget() {
-    State.scroll.target = clamp(State.scroll.target, 0, State.totalW);
-  },
-
-  update() {
-    // Apply inertia from touch throw
-    if (!State.touch.active && Math.abs(State.scroll.velocity) > 0.1) {
-      State.scroll.target += State.scroll.velocity;
-      State.scroll.velocity *= CONFIG.friction;
-      this.clampTarget();
-    }
-
-    // Lerp current to target
-    State.scroll.current = lerp(State.scroll.current, State.scroll.target, CONFIG.ease);
-
-    // Apply to track
-    DOM.track.style.transform = `translateX(${-State.scroll.current}px)`;
-
-    // Progress bar
-    const pct = (State.scroll.current / State.totalW) * 100;
-    DOM.progressBar.style.width = pct + '%';
-
-    // Hide hint after scrolling
-    if (State.scroll.current > 60 && DOM.scrollHint.style.opacity !== '0') {
-      DOM.scrollHint.style.opacity = '0';
-      DOM.scrollHint.style.pointerEvents = 'none';
-    }
-  }
-};
-
-// ─────────────────────────────────────────────
-// 14. MOUSE TRACKING
-// ─────────────────────────────────────────────
-function initMouseTracking() {
-  window.addEventListener('mousemove', (e) => {
-    State.mouse.x = e.clientX;
-    State.mouse.y = e.clientY;
-    State.mouse.nx = (e.clientX / window.innerWidth - 0.5) * 2;
-    State.mouse.ny = (e.clientY / window.innerHeight - 0.5) * 2;
-
-    // Smooth cursor
-    State.cursor.x = lerp(State.cursor.x, e.clientX, 0.15);
-    State.cursor.y = lerp(State.cursor.y, e.clientY, 0.15);
-    State.cursorDot.x = lerp(State.cursorDot.x, e.clientX, 0.5);
-    State.cursorDot.y = lerp(State.cursorDot.y, e.clientY, 0.5);
-  });
-
-  // Touch as mouse
-  window.addEventListener('touchmove', (e) => {
-    const t = e.touches[0];
-    State.mouse.nx = (t.clientX / window.innerWidth - 0.5) * 2;
-    State.mouse.ny = (t.clientY / window.innerHeight - 0.5) * 2;
-  }, { passive: true });
-}
-
-function updateCursor() {
-  DOM.cursor.style.left = State.cursor.x + 'px';
-  DOM.cursor.style.top  = State.cursor.y + 'px';
-  DOM.cursorDot.style.left = State.cursorDot.x + 'px';
-  DOM.cursorDot.style.top  = State.cursorDot.y + 'px';
-}
-
-// ─────────────────────────────────────────────
-// 15. FLASH & GLITCH HELPERS
-// ─────────────────────────────────────────────
-function flashScreen(opacity, duration) {
-  DOM.flash.style.opacity = opacity;
-  setTimeout(() => { DOM.flash.style.transition = `opacity ${duration * 2}ms ease`; DOM.flash.style.opacity = 0; }, 16);
-  setTimeout(() => { DOM.flash.style.transition = ''; }, duration * 2 + 16);
-}
-
-function burstGlitch(count = 5) {
-  State.glitching = true;
-  let i = 0;
-  const fire = () => {
-    flashScreen(rand(0.1, 0.5), 40);
-    State.cards.forEach(c => c.glitchTime = 30);
-    if (i++ < count) setTimeout(fire, 60 + Math.random() * 80);
-    else setTimeout(() => { State.glitching = false; }, 200);
-  };
-  fire();
-}
-
-// ─────────────────────────────────────────────
-// 16. MAIN RAF LOOP
-// ─────────────────────────────────────────────
-function mainLoop(t) {
-  State.frame++;
-
-  // Scroll
-  ScrollEngine.update();
-
-  // Era detection
-  EraSystem.update();
-
-  // Parallax
-  Parallax.update();
-
-  // Neural threads
-  Neural.update(t);
-
-  // Shader on cards
-  State.cards.forEach(c => {
-    Shader.update(c, t);
-    if (c.glitchTime > 0) {
-      c.el.classList.add('active');
-      c.glitchTime--;
-    } else if (!c.hovered) {
-      c.el.classList.remove('active');
-    }
-  });
-
-  // Particles
-  Particles.update(t);
-
-  // Cursor
-  updateCursor();
-
-  requestAnimationFrame(mainLoop);
-}
-
-// ─────────────────────────────────────────────
-// 17. RESIZE
-// ─────────────────────────────────────────────
-function handleResize() {
-  buildTrack();
-  Neural.update(0);
-  Particles.resize();
-  Particles.spawn();
-  ScrollEngine.clampTarget();
-}
-
-// ─────────────────────────────────────────────
-// 18. KONAMI CODE & VOID MODE
-// ─────────────────────────────────────────────
-const KonamiEngine = {
-  sequence: ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'],
-  input: [],
-  voidMode: false,
-  badge: document.getElementById('konami-badge'),
-
-  init() {
-    window.addEventListener('keydown', (e) => {
-      this.input.push(e.key);
-      if (this.input.length > this.sequence.length) this.input.shift();
-      if (this.input.join(',') === this.sequence.join(',')) {
-        this.activate();
-      }
-    });
-
-    // Triple-tap anywhere on mobile (3 quick taps)
-    let tapCount = 0, tapTimer = null;
-    window.addEventListener('touchstart', () => {
-      tapCount++;
-      clearTimeout(tapTimer);
-      tapTimer = setTimeout(() => { tapCount = 0; }, 600);
-      if (tapCount >= 5) { tapCount = 0; this.activate(); }
-    }, { passive: true });
-  },
-
-  activate() {
-    this.voidMode = !this.voidMode;
-    document.body.classList.toggle('void-mode', this.voidMode);
-    burstGlitch(8);
-
-    this.badge.textContent = this.voidMode ? '⬆⬆⬇⬇ — VOID MODE ON' : '⬆⬆⬇⬇ — VOID MODE OFF';
-    this.badge.classList.add('show');
-    setTimeout(() => this.badge.classList.remove('show'), 3000);
-
-    if (this.voidMode) {
-      // Hijack colors to dark red
-      document.documentElement.style.setProperty('--current-accent', '#8b0000');
-      document.documentElement.style.setProperty('--current-glow', 'rgba(139,0,0,0.5)');
-      document.documentElement.style.setProperty('--current-text', '#ff4444');
-      DOM.eraName.textContent = 'VOID — ██████████';
-    } else {
-      EraSystem.transition(State.era);
-    }
-  }
-};
-
-// ─────────────────────────────────────────────
-// 19. TYPEWRITER INTRO
-// ─────────────────────────────────────────────
-const TypewriterIntro = {
-  lines: [
-    { text: 'KENJAKU — ETERNAL VESSEL', delay: 0 },
-    { text: '不死の器', delay: 800 },
-  ],
-  container: null,
-
-  init() {
-    this.container = document.createElement('div');
-    Object.assign(this.container.style, {
-      position: 'fixed', inset: '0', zIndex: '300',
-      background: '#000', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', gap: '1rem',
-      pointerEvents: 'none',
-    });
-
-    const line1 = document.createElement('div');
-    line1.style.cssText = `font-family:'JetBrains Mono',monospace;font-size:clamp(0.8rem,2.5vw,1.1rem);letter-spacing:0.4em;color:rgba(200,160,220,0.7);text-transform:uppercase;`;
-    const line2 = document.createElement('div');
-    line2.style.cssText = `font-family:'Noto Serif JP',serif;font-size:clamp(1rem,3vw,1.5rem);color:rgba(255,255,255,0.15);letter-spacing:0.3em;`;
-
-    this.container.appendChild(line1);
-    this.container.appendChild(line2);
-    document.body.appendChild(this.container);
-
-    this.typeInto(line1, 'KENJAKU — ETERNAL VESSEL', 60, () => {
-      setTimeout(() => {
-        this.typeInto(line2, '不死の器', 120, () => {
-          setTimeout(() => this.dismiss(), 700);
-        });
-      }, 400);
-    });
-  },
-
-  typeInto(el, text, speed, cb) {
-    let i = 0;
-    const cur = document.createElement('span');
-    cur.className = 'tw-cursor';
-    el.appendChild(cur);
-
-    const tick = () => {
-      if (i < text.length) {
-        el.insertBefore(document.createTextNode(text[i++]), cur);
-        setTimeout(tick, speed + Math.random() * speed * 0.6);
-      } else {
-        cur.remove();
-        if (cb) cb();
-      }
-    };
-    tick();
-  },
-
-  dismiss() {
-    this.container.style.transition = 'opacity 1s ease';
-    this.container.style.opacity = '0';
-    setTimeout(() => this.container.remove(), 1000);
-  }
-};
-
-// ─────────────────────────────────────────────
-// 20. INIT
-// ─────────────────────────────────────────────
-function init() {
-  buildTrack();
-  Neural.init();
-  Particles.init();
-  ScrollEngine.init();
-  initMouseTracking();
-  KonamiEngine.init();
-  EraSystem.transition(1);
-
-  window.addEventListener('resize', handleResize);
-
-  // Typewriter intro then start RAF
-  TypewriterIntro.init();
-  setTimeout(() => requestAnimationFrame(mainLoop), 200);
-}
-
-init();
-
-</script>
+    <div class="container">
+        <canvas id="canvas" width="1000" height="620"></canvas>
+        <div class="phase-indicator" id="phaseIndicator"></div>
+        <div class="info-overlay">🚁 Rotor Spin-Up & Vertical Takeoff</div>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const phaseIndicator = document.getElementById('phaseIndicator');
+            const W = canvas.width;
+            const H = canvas.height;
+
+            // ──────────────────────────────────────
+            // CONFIGURATION
+            // ──────────────────────────────────────
+            const GROUND_Y = 470; // Ground surface level
+            const HELI_INITIAL_CX = 480; // Helicopter body center X
+            const HELI_INITIAL_CY = 370; // Helicopter body center Y
+            const ROTOR_HUB_OFFSET_Y = -72; // Rotor hub relative to body center
+            const BLADE_LENGTH = 178; // Main rotor blade length
+            const BLADE_WIDTH = 11; // Blade chord width
+            const MAX_ROTOR_SPEED = 0.38; // Radians per frame at ~60fps (~230 RPM)
+            const TAIL_ROTOR_SPEED_MULT = 5.2; // Tail rotor spins this many times faster
+            const LIFT_OFF_HEIGHT = 210; // How high the helicopter rises (px)
+
+            // ──────────────────────────────────────
+            // ANIMATION STATE
+            // ──────────────────────────────────────
+            let rotorAngle = Math.random() * Math.PI * 2;
+            let rotorSpeed = 0.015; // Start barely spinning
+            let targetRotorSpeed = 0.015;
+            let tailRotorAngle = Math.random() * Math.PI * 2;
+            let heliY = HELI_INITIAL_CY;
+            let heliX = HELI_INITIAL_CX;
+            let shakeAmplitude = 0;
+            let verticalVelocity = 0;
+            let liftOffActive = false;
+            let liftOffProgress = 0;
+            let particles = [];
+            let time = 0;
+            let phaseStartTime = 0;
+            let currentPhase = 'idle';
+            let phaseTimer = 0;
+            let smokeParticles = [];
+
+            // ──────────────────────────────────────
+            // PHASE SYSTEM
+            // ──────────────────────────────────────
+            const phases = {
+                idle: { duration: 1.2, next: 'spooling', label: 'Engine Start' },
+                spooling: { duration: 3.8, next: 'fullPower', label: 'Spooling Up' },
+                fullPower: { duration: 2.0, next: 'shaking', label: 'Full Power' },
+                shaking: { duration: 1.4, next: 'liftOff', label: 'Ready for Takeoff' },
+                liftOff: { duration: 4.5, next: 'hovering', label: 'Lifting Off' },
+                hovering: { duration: 999, next: 'hovering', label: 'Hovering' },
+            };
+
+            function setPhase(phaseName) {
+                currentPhase = phaseName;
+                phaseTimer = 0;
+                phaseStartTime = time;
+                const label = phases[phaseName]?.label || '';
+                phaseIndicator.textContent = label;
+                if (label) {
+                    phaseIndicator.classList.add('visible');
+                } else {
+                    phaseIndicator.classList.remove('visible');
+                }
+                // Fade out indicator after a moment
+                clearTimeout(phaseIndicator._timeout);
+                phaseIndicator._timeout = setTimeout(() => {
+                    phaseIndicator.classList.remove('visible');
+                }, 2200);
+            }
+
+            // ──────────────────────────────────────
+            // PARTICLE SYSTEM (DUST)
+            // ──────────────────────────────────────
+            function spawnDustParticle(groundX, groundY, intensity) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = (0.5 + Math.random() * 3.5) * intensity;
+                const life = 0.6 + Math.random() * 2.2;
+                return {
+                    x: groundX + (Math.random() - 0.5) * 30 * intensity,
+                    y: groundY - Math.random() * 8,
+                    vx: Math.cos(angle) * speed,
+                    vy: -Math.random() * 2.5 * intensity - 0.3,
+                    size: 0.6 + Math.random() * 3.5 * intensity,
+                    opacity: 0.35 + Math.random() * 0.65,
+                    life: life,
+                    maxLife: life,
+                    color: Math.random() < 0.5 ?
+                        { r: 180 + Math.random() * 50, g: 155 + Math.random() * 40, b: 115 + Math.random() * 35 } :
+                        { r: 200 + Math.random() * 40, g: 175 + Math.random() * 35, b: 140 + Math.random() * 30 },
+                };
+            }
+
+            function spawnSmokeParticle(x, y) {
+                return {
+                    x: x + (Math.random() - 0.5) * 16,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 0.6,
+                    vy: -0.4 - Math.random() * 1.2,
+                    size: 2 + Math.random() * 7,
+                    opacity: 0.25 + Math.random() * 0.4,
+                    life: 1.2 + Math.random() * 2.5,
+                    maxLife: 1.2 + Math.random() * 2.5,
+                    color: { r: 160, g: 150, b: 140 },
+                };
+            }
+
+            // ──────────────────────────────────────
+            // HELICOPTER DRAWING FUNCTIONS
+            // ──────────────────────────────────────
+            function drawHelicopterBody(context, cx, cy) {
+                context.save();
+                context.translate(cx, cy);
+
+                // ── Shadow on fuselage underside ──
+                // (drawn as part of the body for depth)
+
+                // ── TAIL BOOM ──
+                context.fillStyle = '#e8e4df';
+                context.beginPath();
+                context.moveTo(-28, -22);
+                context.lineTo(-155, -44);
+                context.lineTo(-165, -36);
+                context.lineTo(-160, -28);
+                context.lineTo(-32, -6);
+                context.closePath();
+                context.fill();
+
+                // Tail boom lower accent (red)
+                context.fillStyle = '#c0392b';
+                context.beginPath();
+                context.moveTo(-32, -6);
+                context.lineTo(-160, -28);
+                context.lineTo(-158, -18);
+                context.lineTo(-30, 4);
+                context.closePath();
+                context.fill();
+
+                // Tail boom top highlight
+                context.fillStyle = '#f5f3f0';
+                context.beginPath();
+                context.moveTo(-28, -22);
+                context.lineTo(-155, -44);
+                context.lineTo(-148, -50);
+                context.lineTo(-22, -28);
+                context.closePath();
+                context.fill();
+
+                // ── MAIN FUSELAGE ──
+                // Lower body (red)
+                context.fillStyle = '#d4342e';
+                context.beginPath();
+                context.moveTo(55, 8);
+                context.quadraticCurveTo(30, 35, -10, 30);
+                context.quadraticCurveTo(-40, 26, -55, 10);
+                context.lineTo(-40, -8);
+                context.quadraticCurveTo(-5, -18, 35, -10);
+                context.quadraticCurveTo(60, -2, 65, 14);
+                context.closePath();
+                context.fill();
+
+                // Upper body (white/cream)
+                context.fillStyle = '#f9f7f4';
+                context.beginPath();
+                context.moveTo(58, 6);
+                context.quadraticCurveTo(35, -20, -5, -28);
+                context.quadraticCurveTo(-35, -28, -52, -15);
+                context.lineTo(-38, -22);
+                context.quadraticCurveTo(-12, -36, 25, -28);
+                context.quadraticCurveTo(55, -16, 64, 2);
+                context.closePath();
+                context.fill();
+
+                // Fuselage side panel / stripe
+                context.fillStyle = '#1a3a5c';
+                context.beginPath();
+                context.moveTo(56, 1);
+                context.lineTo(-42, -12);
+                context.lineTo(-44, -5);
+                context.lineTo(54, 6);
+                context.closePath();
+                context.fill();
+
+                // ── NOSE CONE ──
+                context.fillStyle = '#f5f2ed';
+                context.beginPath();
+                context.moveTo(58, -6);
+                context.quadraticCurveTo(78, -14, 90, -6);
+                context.quadraticCurveTo(82, 8, 64, 12);
+                context.quadraticCurveTo(55, 4, 58, -6);
+                context.fill();
+
+                // Nose highlight
+                context.fillStyle = '#ffffff';
+                context.beginPath();
+                context.arc(78, -4, 11, -0.7, 0.6, false);
+                context.fill();
+
+                // ── COCKPIT WINDOWS ──
+                // Main windshield
+                const glassGrad = context.createLinearGradient(35, -20, 65, -5);
+                glassGrad.addColorStop(0, '#334e6b');
+                glassGrad.addColorStop(0.4, '#5b7fa3');
+                glassGrad.addColorStop(0.7, '#8ab4d8');
+                glassGrad.addColorStop(1, '#4a6d8c');
+                context.fillStyle = glassGrad;
+                context.beginPath();
+                context.moveTo(42, -14);
+                context.quadraticCurveTo(55, -22, 68, -16);
+                context.lineTo(66, -4);
+                context.quadraticCurveTo(52, -6, 40, -6);
+                context.closePath();
+                context.fill();
+
+                // Windshield frame highlight
+                context.strokeStyle = 'rgba(255,255,255,0.5)';
+                context.lineWidth = 1.2;
+                context.beginPath();
+                context.moveTo(42, -14);
+                context.quadraticCurveTo(55, -22, 68, -16);
+                context.stroke();
+
+                // Side window
+                context.fillStyle = '#4b7396';
+                context.beginPath();
+                context.moveTo(30, -12);
+                context.quadraticCurveTo(42, -18, 50, -12);
+                context.lineTo(48, -4);
+                context.quadraticCurveTo(38, -3, 28, -4);
+                context.closePath();
+                context.fill();
+
+                // Window reflection
+                context.fillStyle = 'rgba(255,255,255,0.25)';
+                context.beginPath();
+                context.moveTo(44, -16);
+                context.lineTo(52, -12);
+                context.lineTo(48, -7);
+                context.lineTo(40, -10);
+                context.closePath();
+                context.fill();
+
+                // ── ENGINE HOUSING (top rear) ──
+                context.fillStyle = '#e0dcd6';
+                context.beginPath();
+                context.moveTo(-18, -26);
+                context.quadraticCurveTo(-35, -34, -48, -28);
+                context.lineTo(-44, -18);
+                context.quadraticCurveTo(-28, -20, -14, -18);
+                context.closePath();
+                context.fill();
+                context.fillStyle = '#c8c4bd';
+                context.beginPath();
+                context.moveTo(-20, -24);
+                context.quadraticCurveTo(-35, -30, -44, -26);
+                context.lineTo(-42, -22);
+                context.quadraticCurveTo(-30, -23, -18, -20);
+                context.closePath();
+                context.fill();
+
+                // Engine intake
+                context.fillStyle = '#2c2c2c';
+                context.beginPath();
+                context.ellipse(-30, -28, 7, 4, -0.2, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = '#1a1a1a';
+                context.beginPath();
+                context.ellipse(-30, -28, 4, 2.5, -0.2, 0, Math.PI * 2);
+                context.fill();
+
+                // ── ROTOR MAST / HUB BASE ──
+                context.fillStyle = '#5a5a5a';
+                context.beginPath();
+                context.moveTo(-8, -25);
+                context.lineTo(8, -25);
+                context.lineTo(6, -36);
+                context.lineTo(-4, -36);
+                context.closePath();
+                context.fill();
+                context.fillStyle = '#707070';
+                context.beginPath();
+                context.rect(-3, -40, 8, 5);
+                context.fill();
+
+                // ── TAIL SECTION ──
+                // Vertical stabilizer
+                context.fillStyle = '#e8e4df';
+                context.beginPath();
+                context.moveTo(-148, -44);
+                context.quadraticCurveTo(-158, -68, -168, -56);
+                context.lineTo(-170, -40);
+                context.quadraticCurveTo(-162, -36, -155, -38);
+                context.closePath();
+                context.fill();
+                context.fillStyle = '#d4342e';
+                context.beginPath();
+                context.moveTo(-152, -42);
+                context.quadraticCurveTo(-160, -58, -166, -52);
+                context.lineTo(-167, -42);
+                context.quadraticCurveTo(-160, -38, -154, -38);
+                context.closePath();
+                context.fill();
+
+                // Horizontal stabilizer
+                context.fillStyle = '#e0dcd6';
+                context.beginPath();
+                context.moveTo(-130, -30);
+                context.lineTo(-145, -30);
+                context.lineTo(-148, -22);
+                context.lineTo(-132, -22);
+                context.closePath();
+                context.fill();
+
+                // Tail rotor housing
+                context.fillStyle = '#6a6a6a';
+                context.beginPath();
+                context.arc(-167, -38, 7, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = '#555';
+                context.beginPath();
+                context.arc(-167, -38, 3.5, 0, Math.PI * 2);
+                context.fill();
+
+                // ── LANDING SKIDS ──
+                // Rear strut
+                context.fillStyle = '#4a4a4a';
+                context.beginPath();
+                context.moveTo(-20, 28);
+                context.lineTo(-16, 52);
+                context.lineTo(-8, 52);
+                context.lineTo(-10, 28);
+                context.closePath();
+                context.fill();
+                // Front strut
+                context.beginPath();
+                context.moveTo(20, 22);
+                context.lineTo(26, 52);
+                context.lineTo(34, 52);
+                context.lineTo(30, 22);
+                context.closePath();
+                context.fill();
+
+                // Skid tubes
+                context.fillStyle = '#3a3a3a';
+                context.beginPath();
+                context.roundRect(-28, 48, 75, 7, 3.5);
+                context.fill();
+                context.fillStyle = '#555';
+                context.beginPath();
+                context.roundRect(-26, 49, 71, 3, 1.5);
+                context.fill();
+
+                // Skid caps
+                context.fillStyle = '#333';
+                context.beginPath();
+                context.arc(-24, 51.5, 4, 0, Math.PI * 2);
+                context.fill();
+                context.beginPath();
+                context.arc(42, 51.5, 4, 0, Math.PI * 2);
+                context.fill();
+
+                // ── EXHAUST ──
+                context.fillStyle = '#3a3a3a';
+                context.beginPath();
+                context.ellipse(-38, -10, 6, 3, 0.1, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = '#1a1a1a';
+                context.beginPath();
+                context.ellipse(-38, -10, 3.5, 1.8, 0.1, 0, Math.PI * 2);
+                context.fill();
+
+                // ── SMALL DETAILS ──
+                // Door line
+                context.strokeStyle = 'rgba(0,0,0,0.2)';
+                context.lineWidth = 1;
+                context.beginPath();
+                context.moveTo(15, -8);
+                context.lineTo(15, 18);
+                context.stroke();
+
+                // Panel line on tail boom
+                context.strokeStyle = 'rgba(0,0,0,0.15)';
+                context.lineWidth = 0.8;
+                context.beginPath();
+                context.moveTo(-55, -16);
+                context.lineTo(-55, 6);
+                context.stroke();
+
+                // Antenna on top
+                context.strokeStyle = '#555';
+                context.lineWidth = 1.5;
+                context.beginPath();
+                context.moveTo(-8, -36);
+                context.lineTo(-10, -50);
+                context.stroke();
+                context.fillStyle = '#ff4444';
+                context.beginPath();
+                context.arc(-10, -51, 2.5, 0, Math.PI * 2);
+                context.fill();
+
+                // Navigation light on tail
+                context.fillStyle = '#ff3333';
+                context.beginPath();
+                context.arc(-166, -34, 2, 0, Math.PI * 2);
+                context.fill();
+                context.shadowColor = '#ff0000';
+                context.shadowBlur = 4;
+                context.fill();
+                context.shadowBlur = 0;
+
+                context.restore();
+            }
+
+            function drawMainRotor(context, cx, cy, angle, speed, blurFactor) {
+                const hubX = cx;
+                const hubY = cy + ROTOR_HUB_OFFSET_Y;
+
+                context.save();
+
+                // ── ROTOR DISC (motion blur at high speed) ──
+                if (blurFactor > 0.15) {
+                    const discAlpha = Math.min(0.55, blurFactor * 0.7);
+                    const discGrad = context.createRadialGradient(hubX, hubY, BLADE_LENGTH * 0.08, hubX, hubY, BLADE_LENGTH);
+                    discGrad.addColorStop(0, 'rgba(200,210,220,0)');
+                    discGrad.addColorStop(0.08, 'rgba(190,200,215,0.05)');
+                    discGrad.addColorStop(0.3, `rgba(170,185,200,${discAlpha * 0.5})`);
+                    discGrad.addColorStop(0.7, `rgba(150,165,185,${discAlpha * 0.75})`);
+                    discGrad.addColorStop(0.88, `rgba(140,155,175,${discAlpha})`);
+                    discGrad.addColorStop(0.96, `rgba(160,175,190,${discAlpha * 1.1})`);
+                    discGrad.addColorStop(1, 'rgba(180,195,210,0)');
+                    context.fillStyle = discGrad;
+                    context.beginPath();
+                    context.arc(hubX, hubY, BLADE_LENGTH, 0, Math.PI * 2);
+                    context.fill();
+                }
+
+                // ── DRAW BLADES ──
+                const numBladeSets = 1 + Math.floor(blurFactor * 16);
+                for (let set = 0; set < numBladeSets; set++) {
+                    const offsetAngle = (set / numBladeSets) * Math.PI * 0.5;
+                    const alpha = set === 0 ? 0.9 : Math.max(0.03, (1 - blurFactor) * 0.5 / numBladeSets);
+                    if (alpha < 0.02 && set > 0) continue;
+
+                    for (let i = 0; i < 4; i++) {
+                        const bladeAngle = angle + offsetAngle + (i * Math.PI) / 2;
+                        context.save();
+                        context.translate(hubX, hubY);
+                        context.rotate(bladeAngle);
+
+                        // Blade shape
+                        const tipOffset = BLADE_LENGTH - 8;
+                        context.fillStyle = `rgba(55,60,68,${alpha})`;
+                        context.beginPath();
+                        context.moveTo(14, -BLADE_WIDTH / 2);
+                        context.lineTo(tipOffset - 8, -BLADE_WIDTH / 2 + 0.5);
+                        context.quadraticCurveTo(tipOffset + 6, -BLADE_WIDTH / 2 + 1, tipOffset + 12, -2);
+                        context.quadraticCurveTo(tipOffset + 10, 3, tipOffset, BLADE_WIDTH / 2 - 1);
+                        context.lineTo(16, BLADE_WIDTH / 2);
+                        context.quadraticCurveTo(8, 0, 14, -BLADE_WIDTH / 2);
+                        context.fill();
+
+                        // Blade highlight
+                        context.fillStyle = `rgba(180,190,200,${alpha * 0.5})`;
+                        context.beginPath();
+                        context.moveTo(18, -BLADE_WIDTH / 2 + 2);
+                        context.lineTo(tipOffset - 10, -BLADE_WIDTH / 2 + 2.5);
+                        context.quadraticCurveTo(tipOffset + 4, -BLADE_WIDTH / 2 + 2, tipOffset + 8, -1);
+                        context.quadraticCurveTo(tipOffset + 5, 1.5, tipOffset - 4, BLADE_WIDTH / 2 - 2);
+                        context.lineTo(20, BLADE_WIDTH / 2 - 1);
+                        context.quadraticCurveTo(12, 0, 18, -BLADE_WIDTH / 2 + 2);
+                        context.fill();
+
+                        // Tip cap
+                        context.fillStyle = `rgba(200,210,220,${alpha * 0.7})`;
+                        context.beginPath();
+                        context.arc(tipOffset + 7, -0.5, 4.5, -0.4, 0.8);
+                        context.fill();
+
+                        context.restore();
+                    }
+                }
+
+                // ── ROTOR HUB ──
+                const hubGrad = context.createRadialGradient(hubX, hubY, 2, hubX, hubY, 13);
+                hubGrad.addColorStop(0, '#888');
+                hubGrad.addColorStop(0.5, '#555');
+                hubGrad.addColorStop(1, '#333');
+                context.fillStyle = hubGrad;
+                context.beginPath();
+                context.arc(hubX, hubY, 12, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = '#444';
+                context.beginPath();
+                context.arc(hubX, hubY, 5, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = '#666';
+                context.beginPath();
+                context.arc(hubX, hubY, 2.5, 0, Math.PI * 2);
+                context.fill();
+
+                context.restore();
+            }
+
+            function drawTailRotor(context, cx, cy) {
+                const tailRotorX = cx - 167;
+                const tailRotorY = cy - 38;
+
+                context.save();
+
+                // Fast-spinning disc
+                const discGrad = context.createRadialGradient(tailRotorX, tailRotorY, 2, tailRotorX, tailRotorY, 14);
+                discGrad.addColorStop(0, 'rgba(180,190,200,0.1)');
+                discGrad.addColorStop(0.5, 'rgba(160,175,190,0.45)');
+                discGrad.addColorStop(0.85, 'rgba(140,155,170,0.55)');
+                discGrad.addColorStop(1, 'rgba(130,145,160,0.15)');
+                context.fillStyle = discGrad;
+                context.beginPath();
+                context.arc(tailRotorX, tailRotorY, 14, 0, Math.PI * 2);
+                context.fill();
+
+                // Hub
+                context.fillStyle = '#555';
+                context.beginPath();
+                context.arc(tailRotorX, tailRotorY, 3.5, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = '#333';
+                context.beginPath();
+                context.arc(tailRotorX, tailRotorY, 1.8, 0, Math.PI * 2);
+                context.fill();
+
+                context.restore();
+            }
+
+            function drawGroundShadow(context, cx, groundY, heliActualY, rotorWashIntensity) {
+                const heightAboveGround = groundY - (heliActualY + 52);
+                const shadowScale = 1 + rotorWashIntensity * 0.5;
+                const shadowOpacity = Math.max(0.08, 0.55 - (heightAboveGround / LIFT_OFF_HEIGHT) * 0.5 - rotorWashIntensity *
+                    0.2);
+                const shadowWidth = 130 * shadowScale;
+                const shadowHeight = 18 * shadowScale;
+
+                const shadowGrad = context.createRadialGradient(cx, groundY, shadowWidth * 0.2, cx, groundY, shadowWidth *
+                0.7);
+                shadowGrad.addColorStop(0, `rgba(20,15,10,${shadowOpacity})`);
+                shadowGrad.addColorStop(0.5, `rgba(20,15,10,${shadowOpacity * 0.7})`);
+                shadowGrad.addColorStop(1, 'rgba(20,15,10,0)');
+
+                context.fillStyle = shadowGrad;
+                context.beginPath();
+                context.ellipse(cx, groundY, shadowWidth * 0.7, shadowHeight, 0, 0, Math.PI * 2);
+                context.fill();
+
+                // Secondary softer shadow from rotor wash
+                if (rotorWashIntensity > 0.4) {
+                    const washShadowOpacity = (rotorWashIntensity - 0.4) * 0.3;
+                    const washGrad = context.createRadialGradient(cx, groundY, shadowWidth * 0.5, cx, groundY, shadowWidth *
+                    1.3);
+                    washGrad.addColorStop(0, `rgba(30,25,18,${washShadowOpacity * 0.6})`);
+                    washGrad.addColorStop(1, 'rgba(30,25,18,0)');
+                    context.fillStyle = washGrad;
+                    context.beginPath();
+                    context.ellipse(cx, groundY, shadowWidth * 1.3, shadowHeight * 1.8, 0, 0, Math.PI * 2);
+                    context.fill();
+                }
+            }
+
+            // ──────────────────────────────────────
+            // BACKGROUND DRAWING
+            // ──────────────────────────────────────
+            function drawBackground(context) {
+                // Sky gradient
+                const skyGrad = context.createLinearGradient(0, 0, 0, GROUND_Y);
+                skyGrad.addColorStop(0, '#7ec8e3');
+                skyGrad.addColorStop(0.35, '#b5ddf0');
+                skyGrad.addColorStop(0.7, '#d4eaf7');
+                skyGrad.addColorStop(0.95, '#e8f2f8');
+                skyGrad.addColorStop(1, '#dce8ef');
+                context.fillStyle = skyGrad;
+                context.fillRect(0, 0, W, GROUND_Y);
+
+                // Subtle clouds
+                drawCloud(context, 150, 100, 0.7);
+                drawCloud(context, 680, 70, 0.5);
+                drawCloud(context, 820, 150, 0.6);
+                drawCloud(context, 300, 55, 0.45);
+                drawCloud(context, 550, 130, 0.35);
+
+                // Distant hills
+                context.fillStyle = '#c8d9c0';
+                context.beginPath();
+                context.moveTo(0, GROUND_Y);
+                context.quadraticCurveTo(200, GROUND_Y - 40, 350, GROUND_Y - 15);
+                context.quadraticCurveTo(500, GROUND_Y - 55, 650, GROUND_Y - 20);
+                context.quadraticCurveTo(800, GROUND_Y - 35, 1000, GROUND_Y - 10);
+                context.lineTo(1000, GROUND_Y);
+                context.closePath();
+                context.fill();
+
+                // Ground
+                const groundGrad = context.createLinearGradient(0, GROUND_Y, 0, H);
+                groundGrad.addColorStop(0, '#c4b8a8');
+                groundGrad.addColorStop(0.04, '#bfb39f');
+                groundGrad.addColorStop(0.15, '#b5a892');
+                groundGrad.addColorStop(0.5, '#a89880');
+                groundGrad.addColorStop(1, '#8c7b65');
+                context.fillStyle = groundGrad;
+                context.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+
+                // Ground texture
+                context.fillStyle = 'rgba(0,0,0,0.03)';
+                for (let i = 0; i < 60; i++) {
+                    const gx = (i * 163 + 41) % W;
+                    const gy = GROUND_Y + 5 + (i * 73) % (H - GROUND_Y - 20);
+                    context.beginPath();
+                    context.arc(gx, gy, 1 + (i % 3), 0, Math.PI * 2);
+                    context.fill();
+                }
+
+                // Helipad
+                const padCx = HELI_INITIAL_CX;
+                const padCy = GROUND_Y;
+                const padGrad = context.createRadialGradient(padCx, padCy, 30, padCx, padCy, 140);
+                padGrad.addColorStop(0, '#c8bfb2');
+                padGrad.addColorStop(0.7, '#b8ad9c');
+                padGrad.addColorStop(1, '#a39582');
+                context.fillStyle = padGrad;
+                context.beginPath();
+                context.ellipse(padCx, padCy, 140, 25, 0, 0, Math.PI * 2);
+                context.fill();
+
+                // Helipad border ring
+                context.strokeStyle = 'rgba(255,255,255,0.45)';
+                context.lineWidth = 3;
+                context.beginPath();
+                context.ellipse(padCx, padCy, 115, 20, 0, 0, Math.PI * 2);
+                context.stroke();
+                context.strokeStyle = 'rgba(100,80,60,0.3)';
+                context.lineWidth = 1.5;
+                context.beginPath();
+                context.ellipse(padCx, padCy, 125, 22, 0, 0, Math.PI * 2);
+                context.stroke();
+
+                // H marking
+                context.fillStyle = 'rgba(255,255,255,0.7)';
+                context.font = 'bold 36px "Segoe UI", system-ui, sans-serif';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText('H', padCx, padCy - 1);
+
+                // Helipad dashed circle
+                context.setLineDash([8, 14]);
+                context.strokeStyle = 'rgba(255,255,255,0.35)';
+                context.lineWidth = 1.5;
+                context.beginPath();
+                context.ellipse(padCx, padCy, 95, 16, 0, 0, Math.PI * 2);
+                context.stroke();
+                context.setLineDash([]);
+            }
+
+            function drawCloud(context, x, y, scale) {
+                context.save();
+                context.translate(x, y);
+                context.scale(scale, scale);
+                context.fillStyle = 'rgba(255,255,255,0.7)';
+                context.beginPath();
+                context.arc(0, 0, 30, 0, Math.PI * 2);
+                context.arc(28, -8, 22, 0, Math.PI * 2);
+                context.arc(50, 2, 26, 0, Math.PI * 2);
+                context.arc(18, 8, 20, 0, Math.PI * 2);
+                context.arc(-15, 3, 18, 0, Math.PI * 2);
+                context.fill();
+                context.fillStyle = 'rgba(255,255,255,0.45)';
+                context.beginPath();
+                context.arc(8, -12, 24, 0, Math.PI * 2);
+                context.arc(38, -4, 18, 0, Math.PI * 2);
+                context.fill();
+                context.restore();
+            }
+
+            // ──────────────────────────────────────
+            // MAIN ANIMATION LOOP
+            // ──────────────────────────────────────
+            let lastTime = performance.now();
+
+            function animate(timestamp) {
+                const dt = Math.min((timestamp - lastTime) / 1000, 0.1); // Cap at 100ms
+                lastTime = timestamp;
+                time += dt;
+                phaseTimer += dt;
+
+                // ── PHASE MANAGEMENT ──
+                const phaseConfig = phases[currentPhase];
+                if (phaseTimer >= phaseConfig.duration && phaseConfig.next !== currentPhase) {
+                    setPhase(phaseConfig.next);
+                }
+
+                // ── UPDATE ROTOR SPEED BASED ON PHASE ──
+                switch (currentPhase) {
+                    case 'idle':
+                        targetRotorSpeed = 0.02;
+                        break;
+                    case 'spooling':
+                        const spoolProgress = phaseTimer / phases.spooling.duration;
+                        targetRotorSpeed = 0.02 + (MAX_ROTOR_SPEED - 0.02) * easeInOutCubic(spoolProgress);
+                        break;
+                    case 'fullPower':
+                        targetRotorSpeed = MAX_ROTOR_SPEED;
+                        break;
+                    case 'shaking':
+                        targetRotorSpeed = MAX_ROTOR_SPEED;
+                        break;
+                    case 'liftOff':
+                        targetRotorSpeed = MAX_ROTOR_SPEED * 1.02;
+                        break;
+                    case 'hovering':
+                        targetRotorSpeed = MAX_ROTOR_SPEED * 0.98;
+                        break;
+                    default:
+                        targetRotorSpeed = MAX_ROTOR_SPEED;
+                }
+
+                // Smooth rotor speed transition
+                const speedSmoothing = 2.5;
+                rotorSpeed += (targetRotorSpeed - rotorSpeed) * Math.min(speedSmoothing * dt * 4, 1);
+
+                // Update angles
+                rotorAngle += rotorSpeed;
+                tailRotorAngle += rotorSpeed * TAIL_ROTOR_SPEED_MULT;
+
+                // ── BLUR FACTOR ──
+                const blurFactor = Math.max(0, Math.min(1, (rotorSpeed - 0.04) / (MAX_ROTOR_SPEED - 0.04)));
+
+                // ── ROTOR WASH INTENSITY ──
+                const rotorWashIntensity = Math.max(0, Math.min(1, (rotorSpeed - 0.06) / (MAX_ROTOR_SPEED - 0.06)));
+
+                // ── SHAKE ──
+                if (currentPhase === 'shaking' || currentPhase === 'fullPower') {
+                    const shakeTarget = currentPhase === 'shaking' ?
+                        rotorWashIntensity * 4.5 :
+                        rotorWashIntensity * 3.0;
+                    shakeAmplitude += (shakeTarget - shakeAmplitude) * Math.min(dt * 6, 1);
+                } else if (currentPhase === 'liftOff') {
+                    const liftShake = 5.0 * (1 - liftOffProgress) + 2.5 * liftOffProgress;
+                    shakeAmplitude += (liftShake - shakeAmplitude) * Math.min(dt * 5, 1);
+                } else if (currentPhase === 'hovering') {
+                    shakeAmplitude += (1.8 - shakeAmplitude) * Math.min(dt * 3, 1);
+                } else {
+                    shakeAmplitude += (0 - shakeAmplitude) * Math.min(dt * 4, 1);
+                }
+
+                // ── LIFT-OFF ──
+                if (currentPhase === 'liftOff') {
+                    liftOffActive = true;
+                    liftOffProgress = phaseTimer / phases.liftOff.duration;
+                    const easedProgress = easeInOutQuad(liftOffProgress);
+                    const targetY = HELI_INITIAL_CY - LIFT_OFF_HEIGHT * easedProgress;
+                    verticalVelocity = (targetY - heliY) * Math.min(dt * 8, 1);
+                    heliY += verticalVelocity;
+                    if (heliY < targetY - 0.5 && liftOffProgress < 0.95) {
+                        heliY += (targetY - heliY) * dt * 5;
+                    }
+                } else if (currentPhase === 'hovering') {
+                    liftOffActive = true;
+                    liftOffProgress = 1;
+                    const targetY = HELI_INITIAL_CY - LIFT_OFF_HEIGHT;
+                    heliY += (targetY - heliY) * Math.min(dt * 2, 1);
+                    // Gentle hover bob
+                    heliY += Math.sin(time * 1.8) * 0.6;
+                } else if (!liftOffActive) {
+                    heliY = HELI_INITIAL_CY;
+                    verticalVelocity = 0;
+                    liftOffProgress = 0;
+                }
+
+                // ── COMPUTE SHAKE OFFSET ──
+                const shakeX = Math.sin(time * 47.3 + 0.7) * shakeAmplitude * 0.55 +
+                    Math.sin(time * 73.1 + 2.1) * shakeAmplitude * 0.3 +
+                    (Math.random() - 0.5) * shakeAmplitude * 0.35;
+                const shakeY = Math.cos(time * 53.7 + 1.1) * shakeAmplitude * 0.5 +
+                    Math.cos(time * 67.9 + 3.4) * shakeAmplitude * 0.35 +
+                    (Math.random() - 0.5) * shakeAmplitude * 0.3;
+
+                const drawX = heliX + shakeX;
+                const drawY = heliY + shakeY;
+
+                // ── SPAWN DUST PARTICLES ──
+                const dustSpawnRate = rotorWashIntensity * 45;
+                const particlesToSpawn = Math.floor(dustSpawnRate * dt * 60);
+                for (let i = 0; i < particlesToSpawn; i++) {
+                    const spawnX = heliX + (Math.random() - 0.5) * 180 * rotorWashIntensity;
+                    const spawnY = GROUND_Y;
+                    particles.push(spawnDustParticle(spawnX, spawnY, rotorWashIntensity));
+                }
+
+                // Extra dust burst during early lift-off
+                if (currentPhase === 'liftOff' && liftOffProgress < 0.3) {
+                    const burstRate = 30 * (1 - liftOffProgress / 0.3);
+                    const burstCount = Math.floor(burstRate * dt * 60);
+                    for (let i = 0; i < burstCount; i++) {
+                        const spawnX = heliX + (Math.random() - 0.5) * 220;
+                        particles.push(spawnDustParticle(spawnX, GROUND_Y, 1.5));
+                    }
+                }
+
+                // ── SPAWN EXHAUST SMOKE ──
+                if (rotorWashIntensity > 0.5) {
+                    const smokeRate = rotorWashIntensity * 8;
+                    const smokeCount = Math.floor(smokeRate * dt * 60);
+                    for (let i = 0; i < smokeCount; i++) {
+                        const exhaustX = drawX - 38;
+                        const exhaustY = drawY - 10;
+                        smokeParticles.push(spawnSmokeParticle(exhaustX, exhaustY));
+                    }
+                }
+
+                // ── UPDATE PARTICLES ──
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx * dt * 60;
+                    p.y += p.vy * dt * 60;
+                    p.vy += 0.15 * dt * 60; // gravity
+                    p.life -= dt;
+                    if (p.life <= 0 || p.y > GROUND_Y + 30 || p.opacity <= 0.01) {
+                        particles.splice(i, 1);
+                    }
+                }
+                for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                    const p = smokeParticles[i];
+                    p.x += p.vx * dt * 60;
+                    p.y += p.vy * dt * 60;
+                    p.size += 0.3 * dt * 60;
+                    p.life -= dt;
+                    if (p.life <= 0 || p.size > 30) {
+                        smokeParticles.splice(i, 1);
+                    }
+                }
+
+                // Limit particles
+                if (particles.length > 300) particles.splice(0, particles.length - 300);
+                if (smokeParticles.length > 80) smokeParticles.splice(0, smokeParticles.length - 80);
+
+                // ── RENDER ──
+                ctx.clearRect(0, 0, W, H);
+
+                // Background
+                drawBackground(ctx);
+
+                // Ground shadow (drawn before helicopter)
+                drawGroundShadow(ctx, heliX, GROUND_Y, heliY, rotorWashIntensity);
+
+                // Dust particles (behind helicopter)
+                for (const p of particles) {
+                    const alpha = (p.life / p.maxLife) * p.opacity;
+                    if (alpha < 0.01) continue;
+                    const size = p.size * (0.6 + 0.4 * (p.life / p.maxLife));
+                    ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Exhaust smoke
+                for (const p of smokeParticles) {
+                    const alpha = (p.life / p.maxLife) * p.opacity;
+                    if (alpha < 0.01) continue;
+                    const smokeGrad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                    smokeGrad.addColorStop(0, `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha})`);
+                    smokeGrad.addColorStop(1, 'rgba(180,175,165,0)');
+                    ctx.fillStyle = smokeGrad;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Draw helicopter body
+                drawHelicopterBody(ctx, drawX, drawY);
+
+                // Draw tail rotor
+                drawTailRotor(ctx, drawX, drawY);
+
+                // Draw main rotor
+                drawMainRotor(ctx, drawX, drawY, rotorAngle, rotorSpeed, blurFactor);
+
+                // ── FOREGROUND DUST (in front of helicopter, close to ground) ──
+                for (const p of particles) {
+                    if (p.y < GROUND_Y - 5) continue; // Only ground-hugging particles in front
+                    const alpha = (p.life / p.maxLife) * p.opacity * 0.7;
+                    if (alpha < 0.01) continue;
+                    const size = p.size * 0.8;
+                    ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(p.x, Math.min(p.y, GROUND_Y), size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // ── SUBTLE GROUND GLOW FROM ROTOR WASH ──
+                if (rotorWashIntensity > 0.6) {
+                    const glowAlpha = (rotorWashIntensity - 0.6) * 0.25;
+                    const glowGrad = ctx.createRadialGradient(heliX, GROUND_Y, 30, heliX, GROUND_Y, 160);
+                    glowGrad.addColorStop(0, `rgba(240,235,220,${glowAlpha})`);
+                    glowGrad.addColorStop(1, 'rgba(240,235,220,0)');
+                    ctx.fillStyle = glowGrad;
+                    ctx.beginPath();
+                    ctx.ellipse(heliX, GROUND_Y, 160, 30, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // ── HUD-STYLE RPM INDICATOR ──
+                const rpmPercent = Math.round((rotorSpeed / MAX_ROTOR_SPEED) * 100);
+                const indicatorX = W - 90;
+                const indicatorY = 45;
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.beginPath();
+                ctx.roundRect(indicatorX - 35, indicatorY - 14, 70, 36, 8);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = '600 11px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('ROTOR', indicatorX, indicatorY - 2);
+                ctx.fillText(`${rpmPercent}%`, indicatorX, indicatorY + 14);
+                // Mini bar
+                const barWidth = 50;
+                const barHeight = 4;
+                const barX = indicatorX - barWidth / 2;
+                const barY = indicatorY + 20;
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+                const fillColor = rpmPercent > 90 ? '#ff6b4a' : rpmPercent > 60 ? '#ffb347' : '#4ecb71';
+                ctx.fillStyle = fillColor;
+                ctx.fillRect(barX, barY, barWidth * (rpmPercent / 100), barHeight);
+                if (rpmPercent >= 95) {
+                    ctx.fillStyle = '#ff3b1f';
+                    ctx.fillRect(barX, barY, barWidth * (rpmPercent / 100), barHeight);
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // ──────────────────────────────────────
+            // EASING FUNCTIONS
+            // ──────────────────────────────────────
+            function easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            }
+
+            function easeInOutQuad(t) {
+                return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+            }
+
+            // ──────────────────────────────────────
+            // INITIALIZATION
+            // ──────────────────────────────────────
+            setPhase('idle');
+            phaseTimer = 0;
+            rotorSpeed = 0.015;
+            rotorAngle = Math.random() * Math.PI * 2;
+            heliY = HELI_INITIAL_CY;
+            heliX = HELI_INITIAL_CX;
+
+            // Draw initial frame
+            ctx.clearRect(0, 0, W, H);
+            drawBackground(ctx);
+            drawGroundShadow(ctx, heliX, GROUND_Y, heliY, 0);
+            drawHelicopterBody(ctx, heliX, heliY);
+            drawTailRotor(ctx, heliX, heliY);
+            drawMainRotor(ctx, heliX, heliY, rotorAngle, rotorSpeed, 0);
+
+            // Start animation loop
+            lastTime = performance.now();
+            requestAnimationFrame(animate);
+
+            console.log('🚁 Helicopter animation ready!');
+            console.log('   Phases: Idle → Spooling → Full Power → Shaking → Lift Off → Hovering');
+            console.log('   Watch the rotor spin up, dust kick up, and the helicopter take off vertically!');
+        })();
+    </script>
 </body>
-</html>
+   </html>
